@@ -1,439 +1,542 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perkhidmatan Sewa Ambulans - Bantuan Cepat & Profesional</title>
-    <link rel="stylesheet" href="./style.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shortfall Monitoring Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+<style>
+  :root{
+    --ink:#12212e;
+    --paper:#f6f8f9;
+    --line:#dde3e6;
+    --card:#ffffff;
+    --declared:#1f6f78;
+    --undeclared:#c1622c;
+    --muted:#5c6b73;
+    --accent:#12212e;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Inter',system-ui,-apple-system,Segoe UI,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .lls-wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:28px 20px 48px;
+  }
+  .lls-header{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:16px;
+    margin-bottom:28px;
+  }
+  .lls-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:0 0 6px;
+  }
+  .lls-title{
+    font-size:26px;
+    font-weight:700;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .lls-select-wrap{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .lls-select-wrap label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+  #monthSelect{
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink);
+    background:var(--card);
+    border:1.5px solid var(--ink);
+    border-radius:2px;
+    padding:9px 34px 9px 12px;
+    min-width:200px;
+    appearance:none;
+    -webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%2312212e'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+    cursor:pointer;
+  }
+  #monthSelect:focus-visible{
+    outline:2px solid var(--declared);
+    outline-offset:2px;
+  }
+  .lls-status{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:16px;
+    min-height:16px;
+  }
+  .lls-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:20px 22px 8px;
+    margin-bottom:22px;
+  }
+  .lls-card-title{
+    font-size:14px;
+    font-weight:600;
+    letter-spacing:.01em;
+    margin:0 0 4px;
+  }
+  .lls-card-sub{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--muted);
+    margin:0 0 14px;
+  }
+  .lls-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:22px;
+  }
+  @media (max-width:760px){
+    .lls-row{grid-template-columns:1fr;}
+    .lls-header{flex-direction:column;align-items:flex-start;}
+  }
+  .lls-chart{width:100%;height:380px;}
+  .lls-chart.pie{height:340px;}
+  .lls-legend{
+    display:flex;
+    gap:18px;
+    justify-content:flex-end;
+    margin-bottom:6px;
+  }
+  .lls-legend-item{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .lls-dot{
+    width:10px;
+    height:10px;
+    border-radius:2px;
+    display:inline-block;
+  }
+  .lls-svg-scroll{
+    width:100%;
+    height:calc(100% - 26px);
+    overflow-x:auto;
+    overflow-y:hidden;
+  }
+  .lls-svg-scroll svg{
+    height:100%;
+    min-width:100%;
+  }
+  .lls-bar3d{
+    cursor:pointer;
+  }
+  .lls-tooltip{
+    display:none;
+    position:fixed;
+    z-index:9999;
+    background:#12212e;
+    color:#f6f8f9;
+    font-family:'Inter',sans-serif;
+    font-size:12px;
+    line-height:1.5;
+    padding:8px 12px;
+    border-radius:4px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.22);
+    pointer-events:none;
+    white-space:nowrap;
+  }
+  .lls-tooltip-dot{
+    display:inline-block;
+    width:8px;
+    height:8px;
+    border-radius:2px;
+    margin-right:6px;
+  }
+  .lls-empty{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+    padding:40px 0;
+    text-align:center;
+  }
+  .lls-footer{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    color:var(--muted);
+    text-align:center;
+    margin-top:8px;
+  }
+</style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <nav class="nav">
-            <div class="nav-brand">
-                <img src="medivest.webp" alt="Logo" class="logo">
-                <img src="anything is possible.webp" alt="Logo" class="logo">
-            </div>
-            <ul class="nav-links">
-                <li><a href="#home" class="active">Home</a></li>
-                <li><a href="#about">Tentang Kami</a></li>
-                <li><a href="#packages">Pakej</a></li>
-                <li><a href="#gallery">Galeri</a></li>
-                <li><a href="#facilities">Kemudahan</a></li>
-                <li><a href="#contact">Hubungi</a></li>
-            </ul>
-            <div class="nav-actions">
-                <button class="btn-secondary">Tempah Sekarang</button>
-                <div class="mobile-menu">
-                    <i class="fas fa-bars"></i>
-                </div>
-            </div>
-        </nav>
-    </header>
+<div class="lls-wrap">
 
-    <!-- Hero Section -->
-    <section class="hero" id="home">
-        <div class="hero-content">
-            <h1 class="hero-title">Perkhidmatan Sewa Ambulans 24/7</h1>
-            <p class="hero-subtitle">Bantuan cepat dan selamat untuk keperluan perubatan anda</p>
-            <div class="hero-actions">
-                <button class="btn-primary">Tempah Sekarang</button>
-                <button class="btn-outline">Lihat Pakej</button>
-            </div>
-        </div>
-        <div class="hero-stats">
-            <div class="stat-item">
-                <div class="stat-number">24/7</div>
-                <div class="stat-label">Perkhidmatan</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">50+</div>
-                <div class="stat-label">Ambulans Aktif</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">4.9</div>
-                <div class="stat-label">Rating Pelanggan</div>
-            </div>
-        </div>
-    </section>
+  <div class="lls-header">
+    <div>
+      <p class="lls-eyebrow">LLS · Shortfall Monitoring</p>
+      <h1 class="lls-title">Hospital Shortage Overview</h1>
+    </div>
+    <div class="lls-select-wrap">
+      <label for="monthSelect">Reporting period</label>
+      <select id="monthSelect"><option value="ALL">All months</option></select>
+    </div>
+  </div>
 
-    <!-- About Section -->
-    <section class="about" id="about">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Tentang Perkhidmatan Kami</h2>
-                <p class="section-subtitle">Kami menyediakan perkhidmatan ambulans yang cepat, selamat dan profesional</p>
-            </div>
-            <div class="about-content">
-                <div class="about-text">
-                    <h3>Mengapa Pilih Kami?</h3>
-                    <p>Ambulans kami akan beroperasi dengan komitmen untuk memberikan perkhidmatan ambulans terbaik. Kami mempunyai pelbagai jenis ambulans yang sesuai untuk pelbagai keperluan perubatan.</p>
-                    
-                    <div class="features-grid">
-                        <div class="feature">
-                            <i class="fas fa-clock"></i>
-                            <h4>Respons Cepat</h4>
-                            <p>Masa tindak balas kurang dari 15 minit di kawasan bandar</p>
-                        </div>
-                        <div class="feature">
-                            <i class="fas fa-user-md"></i>
-                            <h4>Kakitangan Berpengalaman</h4>
-                            <p>Pemandu dan pembantu perubatan yang terlatih</p>
-                        </div>
-                        <div class="feature">
-                            <i class="fas fa-shield-alt"></i>
-                            <h4>Selamat & Steril</h4>
-                            <p>Kenderaan sentiasa dibersih dan disteril</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="about-image">
-                    <img src="Ambulance_1.webp" alt="Ambulans">
-                </div>
-            </div>
-        </div>
-    </section>
+  <p class="lls-status" id="statusLine">Loading data…</p>
 
-    <!-- Packages Section -->
-    <section class="activities" id="packages">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Pakej Perkhidmatan</h2>
-                <p class="section-subtitle">Pilih pakej yang sesuai dengan keperluan anda</p>
-            </div>
-            <div class="activities-grid">
-                <div class="activity-card">
-                    <div class="activity-image">
-                        <img src="basic.webp" alt="Ambulans Basic">
-                    </div>
-                    <div class="activity-content">
-                        <h3>Ambulans Standard</h3>
-                        <p>Perkhidmatan ambulans asas untuk pemindahan pesakit stabil</p>
-                        <div class="package-price">
-                            <span class="price">RM 150</span>
-                            <span class="duration">/bulan</span>
-                        </div>
-                        <ul class="activity-features">
-                            <li><i class="fas fa-check"></i> Peralatan asas kecemasan</li>
-                            <li><i class="fas fa-check"></i> Ruang untuk 1 pesakit</li>
-                            <li><i class="fas fa-check"></i> Oksigen asas</li>
-                            <li><i class="fas fa-check"></i> </li>
-                        </ul>
-                        
-                        <div class="add-ons">
-                            <h4>Pilihan Tambahan:</h4>
-                            <div class="add-on-item">
-                                <input type="checkbox" id="driver-basic" data-price="50">
-                                <label for="driver-basic">Pemandu (+RM 50)</label>
-                            </div>
-                            <div class="add-on-item">
-                                <input type="checkbox" id="fuel-basic" data-price="30">
-                                <label for="fuel-basic">Minyak (+RM 30)</label>
-                            </div>
-                            <div class="add-on-item">
-                                <input type="checkbox" id="maintenance-basic" data-price="20">
-                                <label for="maintenance-basic">Penyelenggaraan (+RM 20)</label>
-                            </div>
-                        </div>
-                        
-                        <div class="total-price">
-                            <strong>Jumlah: RM <span id="total-basic">150</span></strong>
-                        </div>
-                        
-                        <!--<button class="btn-card" onclick="addToCart('basic')">Tempah Sekarang</button>-->
-                    </div>
-                </div>
+  <div class="lls-card">
+    <p class="lls-card-title">Shortage Declared and Undeclared for All Sites</p>
+    <p class="lls-card-sub" id="colSub">&nbsp;</p>
+    <div id="columnChart" class="lls-chart"></div>
+  </div>
 
-                <div class="activity-card">
-                    <div class="activity-image">
-                        <img src="premium.webp" alt="Ambulans Premium">
-                    </div>
-                    <div class="activity-content">
-                        <h3>Ambulans Komprehensif</h3>
-                        <p>Perkhidmatan ambulans dengan peralatan lebih lengkap</p>
-                        <div class="package-price">
-                            <span class="price">RM 250</span>
-                            <span class="duration">/bulan</span>
-                        </div>
-                        <ul class="activity-features">
-                            <li><i class="fas fa-check"></i> Semua ciri Basic</li>
-                            <li><i class="fas fa-check"></i> Monitor ECG</li>
-                            <li><i class="fas fa-check"></i> Defibrillator</li>
-                            <li><i class="fas fa-check"></i> Ruang untuk 2 pesakit</li>
-                        </ul>
-                        
-                        <div class="add-ons">
-                            <h4>Pilihan Tambahan:</h4>
-                            <div class="add-on-item">
-                                <input type="checkbox" id="driver-premium" data-price="50">
-                                <label for="driver-premium">Pemandu (+RM 50)</label>
-                            </div>
-                            <div class="add-on-item">
-                                <input type="checkbox" id="fuel-premium" data-price="30">
-                                <label for="fuel-premium">Minyak (+RM 30)</label>
-                            </div>
-                            <div class="add-on-item">
-                                <input type="checkbox" id="maintenance-premium" data-price="20">
-                                <label for="maintenance-premium">Penyelenggaraan (+RM 20)</label>
-                            </div>
-                        </div>
-                        
-                        <div class="total-price">
-                            <strong>Jumlah: RM <span id="total-premium">250</span></strong>
-                        </div>
-                        
-                       <!--<button class="btn-card" onclick="addToCart('premium')">Tempah Sekarang</button>-->
-                    </div>
-                </div>
+  <div class="lls-row">
+    <div class="lls-card">
+      <p class="lls-card-title">Pie Chart of Undeclared Shortage by Site</p>
+      <p class="lls-card-sub" id="pieUndecSub">&nbsp;</p>
+      <div id="pieUndeclared" class="lls-chart pie"></div>
+    </div>
+    <div class="lls-card">
+      <p class="lls-card-title">Pie Chart of Declared Shortage by Site</p>
+      <p class="lls-card-sub" id="pieDecSub">&nbsp;</p>
+      <div id="pieDeclared" class="lls-chart pie"></div>
+    </div>
+  </div>
 
-                <div class="activity-card">
-                    <div class="activity-image">
-                        <img src="luxury.webp" alt="Ambulans Luxury">
-                    </div>
-                    <div class="activity-content">
-                        <h3>Ambulans Premium</h3>
-                        <p>Perkhidmatan ambulans VIP dengan kemudahan terbaik</p>
-                        <div class="package-price">
-                            <span class="price">RM 400</span>
-                            <span class="duration">/bulan</span>
-                        </div>
-                        <ul class="activity-features">
-                            <li><i class="fas fa-check"></i> Semua ciri Premium</li>
-                            <li><i class="fas fa-check"></i> Bilik rawatan mini</li>
-                            <li><i class="fas fa-check"></i> Tempat duduk untuk keluarga</li>
-                            <li><i class="fas fa-check"></i> WiFi & hiburan</li>
-                        </ul>
-                        
-                        <div class="add-ons">
-                            <h4>Pilihan Tambahan:</h4>
-                            <div class="add-on-item">
-                                <input type="checkbox" id="driver-luxury" data-price="50">
-                                <label for="driver-luxury">Pemandu (+RM 50)</label>
-                            </div>
-                            <div class="add-on-item">
-                                <input type="checkbox" id="fuel-luxury" data-price="30">
-                                <label for="fuel-luxury">Minyak (+RM 30)</label>
-                            </div>
-                            <div class="add-on-item">
-                                <input type="checkbox" id="maintenance-luxury" data-price="20">
-                                <label for="maintenance-luxury">Penyelenggaraan (+RM 20)</label>
-                            </div>
-                        </div>
-                        
-                        <div class="total-price">
-                            <strong>Jumlah: RM <span id="total-luxury">400</span></strong>
-                        </div>
-                        
-                        <!--<button class="btn-card" onclick="addToCart('luxury')">Tempah Sekarang</button>-->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+  <p class="lls-footer">Data source: “[V2] KPI Target” · auto-synced from monthly SummaryByHospital tabs</p>
+</div>
 
-    <!-- Gallery Section -->
-    <section class="gallery" id="gallery">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Galeri Ambulans</h2>
-                <p class="section-subtitle">Lihat kenderaan ambulans kami yang sedia berkhidmat</p>
-            </div>
-            <div class="gallery-grid">
-                <div class="gallery-item">
-                    <img src="Ambulance_1.webp" alt="Ambulans 1">
-                    <div class="gallery-overlay">
-                        <h4>Kenderaan Medivest</h4>
-                    </div>
-                </div>
-                <div class="gallery-item">
-                    <img src="Ambulance_2.webp" alt="Ambulans 2">
-                    <div class="gallery-overlay">
-                        <h4>Kakitangan </h4>
-                    </div>
-                </div>
-                <div class="gallery-item">
-                    <img src="Ambulance_3.webp" alt="Ambulans 3">
-                    <div class="gallery-overlay">
-                        <h4>New Vehicle</h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+<script>
+/* =====================================================================
+   CONFIG — paste your deployed Apps Script Web App URL below.
+   (Deploy > New deployment > Web app, in the linked Apps Script project)
+   ===================================================================== */
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw93TEnH8A4yuX_CPLOKKDYIbHKxgh-thnZ4JVN-TTRiSab1OEyVIfvzmYFAx5MFEFHkw/exec";
 
-    <!-- Facilities Section -->
-    <section class="facilities" id="facilities">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Kemudahan & Peralatan</h2>
-                <p class="section-subtitle">Kami menyediakan peralatan perubatan terkini untuk keselamatan pesakit</p>
-            </div>
-            <div class="facilities-grid">
-                <div class="facility-card">
-                    <div class="facility-icon">
-                        <i class="fas fa-heartbeat"></i>
-                    </div>
-                    <h3>Monitor ECG</h3>
-                    <p>Pemantauan jantung berterusan semasa perjalanan</p>
-                </div>
-                <div class="facility-card">
-                    <div class="facility-icon">
-                        <i class="fas fa-lungs"></i>
-                    </div>
-                    <h3>Oksigen</h3>
-                    <p>Bekalan oksigen untuk pesakit yang memerlukan</p>
-                </div>
-                <div class="facility-card">
-                    <div class="facility-icon">
-                        <i class="fas fa-briefcase-medical"></i>
-                    </div>
-                    <h3>Kit Kecemasan</h3>
-                    <p>Perlengkapan lengkap untuk rawatan kecemasan</p>
-                </div>
-                <div class="facility-card">
-                    <div class="facility-icon">
-                        <i class="fas fa-user-md"></i>
-                    </div>
-                    <h3>Kakitangan Terlatih</h3>
-                    <p>Pembantu perubatan berpengalaman</p>
-                </div>
-                <div class="facility-card">
-                    <div class="facility-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <h3>Steril & Bersih</h3>
-                    <p>Kenderaan sentiasa disteril selepas setiap penggunaan</p>
-                </div>
-                <div class="facility-card">
-                    <div class="facility-icon">
-                        <i class="fas fa-phone-alt"></i>
-                    </div>
-                    <h3>Hotline 24/7</h3>
-                    <p>Perkhidmatan bantuan tersedia 24 jam</p>
-                </div>
-            </div>
-        </div>
-    </section>
+let RAW_DATA = null;
 
-    <!-- Contact Section -->
-    <section class="contact" id="contact">
-        <div class="container">
-            <div class="contact-content">
-                <div class="contact-info">
-                    <h2>Hubungi Kami</h2>
-                    <p>Perlukan bantuan segera? Hubungi kami sekarang.</p>
-                    
-                    <div class="contact-details">
-                        <div class="contact-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <div>
-                                <h4>Lokasi</h4>
-                                <p>Suite 13.01, Penthouse, Wisma E & C
-                                No.2, Lorong Dungun Kiri, Damansara Heights
-                                50490 Kuala Lumpur.</p>
-                            </div>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fas fa-phone"></i>
-                            <div>
-                                <h4>Telefon Kecemasan</h4>
-                                <p>Tel : +603-20921000,
-                                    Fax : +603-20925000</p>
-                            </div>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fas fa-envelope"></i>
-                            <div>
-                                <h4>Email</h4>
-                                <p>custsvc@medivest.com.my</p>
-                            </div>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fas fa-clock"></i>
-                            <div>
-                                <h4>Waktu Operasi</h4>
-                                <p>24 Jam, 7 Hari Seminggu</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="contact-form">
-                    <form>
-                        <div class="form-group">
-                            <input type="text" placeholder="Nama Penuh" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="email" placeholder="Alamat Email" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="tel" placeholder="Nombor Telefon" required>
-                        </div>
-                        <div class="form-group">
-                            <select required>
-                                <option value="">Pilih Jenis Perkhidmatan</option>
-                                <option value="basic">Ambulans Basic</option>
-                                <option value="premium">Ambulans Premium</option>
-                                <option value="luxury">Ambulans Luxury</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <textarea placeholder="Mesej Anda" rows="5" required></textarea>
-                        </div>
-                        <button type="submit" class="btn-primary">Hantar Pertanyaan</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </section>
+google.charts.load('current', { packages: ['corechart'] });
+google.charts.setOnLoadCallback(init);
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>Ambulans Express</h3>
-                    <p>Perkhidmatan ambulans profesional untuk keperluan perubatan anda.</p>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-whatsapp"></i></a>
-                    </div>
-                </div>
-                <div class="footer-section">
-                    <h4>Pautan Pantas</h4>
-                    <ul>
-                        <li><a href="#home">Home</a></li>
-                        <li><a href="#about">Tentang Kami</a></li>
-                        <li><a href="#packages">Pakej</a></li>
-                        <li><a href="#gallery">Galeri</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Perkhidmatan</h4>
-                    <ul>
-                        <li><a href="#">Sewa Ambulans</a></li>
-                        <li><a href="#">Perkhidmatan Kecemasan</a></li>
-                        <li><a href="#">Pemindahan Pesakit</a></li>
-                        <li><a href="#">Perkhidmatan Korporat</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Langgan Berita</h4>
-                    <p>Dapatkan maklumat terkini tentang promosi dan perkhidmatan</p>
-                    <div class="newsletter">
-                        <input type="email" placeholder="Alamat email anda">
-                        <button type="submit">Langgan</button>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2025 Medivest Sdn. Bhd. Hak Cipta Terpelihara.</p>
-            </div>
-        </div>
-    </footer>
+async function init() {
+  const statusLine = document.getElementById('statusLine');
+  try {
+    const res = await fetch(WEB_APP_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    RAW_DATA = await res.json();
+  } catch (err) {
+    statusLine.textContent = 'Could not load data. Check WEB_APP_URL in dashboard.html — ' + err.message;
+    showEmptyStates();
+    return;
+  }
 
-    <script src="script.js"></script>
+  if (!RAW_DATA || !RAW_DATA.months || RAW_DATA.months.length === 0) {
+    statusLine.textContent = 'No monthly data found yet.';
+    showEmptyStates();
+    return;
+  }
+
+  populateMonthDropdown(RAW_DATA.months);
+  statusLine.textContent = 'Loaded ' + RAW_DATA.months.length + ' month(s) · ' + RAW_DATA.sites.length + ' site(s)';
+
+  document.getElementById('monthSelect').addEventListener('change', renderAll);
+  renderAll();
+  window.addEventListener('resize', debounce(renderAll, 200));
+}
+
+function populateMonthDropdown(months) {
+  const select = document.getElementById('monthSelect');
+  months.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.month;
+    opt.textContent = m.month;
+    select.appendChild(opt);
+  });
+}
+
+function getSelectedAggregate() {
+  const selected = document.getElementById('monthSelect').value;
+  const sites = RAW_DATA.sites;
+
+  if (selected === 'ALL') {
+    const declared = sites.map(() => 0);
+    const undeclared = sites.map(() => 0);
+    RAW_DATA.months.forEach(m => {
+      m.declared.forEach((v, i) => declared[i] += (v || 0));
+      m.undeclared.forEach((v, i) => undeclared[i] += (v || 0));
+    });
+    return { label: 'All months (sum)', declared, undeclared };
+  }
+
+  const m = RAW_DATA.months.find(x => x.month === selected);
+  return { label: selected, declared: m.declared, undeclared: m.undeclared };
+}
+
+function renderAll() {
+  const agg = getSelectedAggregate();
+  document.getElementById('colSub').textContent = agg.label;
+  document.getElementById('pieUndecSub').textContent = agg.label;
+  document.getElementById('pieDecSub').textContent = agg.label;
+
+  drawColumnChart(agg);
+  drawPieChart('pieDeclared', RAW_DATA.sites, agg.declared, 'Declared');
+  drawPieChart('pieUndeclared', RAW_DATA.sites, agg.undeclared, 'Undeclared');
+}
+
+function drawColumnChart(agg) {
+  const container = document.getElementById('columnChart');
+  const sites = RAW_DATA.sites;
+  const declared = agg.declared;
+  const undeclared = agg.undeclared;
+
+  const hasData = declared.some(v => v > 0) || undeclared.some(v => v > 0);
+  if (!hasData) {
+    container.innerHTML = '<div class="lls-empty">No data for this period</div>';
+    return;
+  }
+
+  // --- layout constants (local SVG coordinate space) ---
+  const groupWidth = 46;
+  const barWidth = 16;
+  const barGap = 4;
+  const depthX = 9;   // 3D extrusion skew (horizontal)
+  const depthY = -9;  // 3D extrusion skew (vertical)
+  const plotHeight = 260;
+  const leftPad = 46;
+  const rightPad = 24;
+  const topPad = 26;
+  const bottomPad = 92;
+
+  const n = sites.length;
+  const plotWidth = n * groupWidth;
+  const svgWidth = leftPad + plotWidth + depthX + rightPad;
+  const svgHeight = topPad + Math.abs(depthY) + plotHeight + bottomPad;
+
+  const maxVal = Math.max(1, ...declared, ...undeclared) * 1.15;
+  const scale = plotHeight / maxVal;
+  const baseY = topPad + Math.abs(depthY) + plotHeight;
+
+  const declaredFront = '#1f6f78', declaredTop = shadeHex(declaredFront, 26), declaredSide = shadeHex(declaredFront, -20);
+  const undeclaredFront = '#c1622c', undeclaredTop = shadeHex(undeclaredFront, 26), undeclaredSide = shadeHex(undeclaredFront, -20);
+
+  let svg = `<svg viewBox="0 0 ${svgWidth} ${svgHeight}" preserveAspectRatio="xMinYMid meet" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">`;
+  svg += `<g font-family="Inter, sans-serif">`;
+
+  // gridlines + y-axis labels (0, 25%, 50%, 75%, 100% of maxVal)
+  for (let t = 0; t <= 4; t++) {
+    const val = Math.round((maxVal * t) / 4);
+    const y = baseY - (val * scale);
+    svg += `<line x1="${leftPad}" y1="${y}" x2="${leftPad + plotWidth}" y2="${y}" stroke="#eef1f2" stroke-width="1"/>`;
+    svg += `<text x="${leftPad - 8}" y="${y + 3}" font-size="9" fill="#5c6b73" text-anchor="end">${val.toLocaleString()}</text>`;
+  }
+
+  // bars
+  sites.forEach((site, i) => {
+    const gx = leftPad + i * groupWidth;
+    const dX = gx;
+    const uX = gx + barWidth + barGap;
+    const dH = declared[i] * scale;
+    const uH = undeclared[i] * scale;
+
+    svg += bar3d_(dX, baseY, barWidth, dH, depthX, depthY, declaredFront, declaredTop, declaredSide, site, 'Declared', declared[i] || 0);
+    svg += bar3d_(uX, baseY, barWidth, uH, depthX, depthY, undeclaredFront, undeclaredTop, undeclaredSide, site, 'Undeclared', undeclared[i] || 0);
+
+    const labelX = gx + barWidth + barGap / 2;
+    svg += `<text x="${labelX}" y="${baseY + 14}" font-size="9" fill="#5c6b73" text-anchor="end" transform="rotate(-45 ${labelX} ${baseY + 14})">${escapeXml_(site)}</text>`;
+  });
+
+  // axis line
+  svg += `<line x1="${leftPad}" y1="${topPad}" x2="${leftPad}" y2="${baseY}" stroke="#dde3e6" stroke-width="1"/>`;
+
+  svg += `</g></svg>`;
+
+  container.innerHTML =
+    '<div class="lls-legend">' +
+      '<span class="lls-legend-item"><span class="lls-dot" style="background:' + declaredFront + '"></span>Declared</span>' +
+      '<span class="lls-legend-item"><span class="lls-dot" style="background:' + undeclaredFront + '"></span>Undeclared</span>' +
+    '</div>' +
+    '<div class="lls-svg-scroll">' + svg + '</div>';
+
+  attachBarTooltips_(container);
+}
+
+// Draws one extruded 3D bar (front + top + side faces) as SVG markup,
+// tagged with data attributes so attachBarTooltips_ can show a custom
+// popup on hover (matching the pie chart's tooltip style).
+function bar3d_(x, baseY, width, height, depthX, depthY, frontColor, topColor, sideColor, site, series, value) {
+  if (!height || height <= 0) return '';
+  const topY = baseY - height;
+  const attrs = `class="lls-bar3d" data-site="${escapeXml_(site)}" data-series="${escapeXml_(series)}" data-value="${value}" data-color="${frontColor}"`;
+
+  const front = `<rect ${attrs} x="${x}" y="${topY}" width="${width}" height="${height}" fill="${frontColor}"/>`;
+
+  const topPts = [
+    [x, topY], [x + width, topY],
+    [x + width + depthX, topY + depthY], [x + depthX, topY + depthY]
+  ].map(p => p.join(',')).join(' ');
+  const top = `<polygon ${attrs} points="${topPts}" fill="${topColor}"/>`;
+
+  const sidePts = [
+    [x + width, topY], [x + width, baseY],
+    [x + width + depthX, baseY + depthY], [x + width + depthX, topY + depthY]
+  ].map(p => p.join(',')).join(' ');
+  const side = `<polygon ${attrs} points="${sidePts}" fill="${sideColor}"/>`;
+
+  return front + top + side;
+}
+
+// Attaches a floating, styled tooltip (site / series / value) to every
+// bar face in the given container, shown on hover and following the cursor.
+function attachBarTooltips_(container) {
+  let tooltip = document.getElementById('llsBarTooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'llsBarTooltip';
+    tooltip.className = 'lls-tooltip';
+    document.body.appendChild(tooltip);
+  }
+
+  const shapes = container.querySelectorAll('.lls-bar3d');
+  shapes.forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      const site = el.getAttribute('data-site');
+      const series = el.getAttribute('data-series');
+      const value = Number(el.getAttribute('data-value')).toLocaleString();
+      const color = el.getAttribute('data-color');
+      tooltip.innerHTML =
+        '<span class="lls-tooltip-dot" style="background:' + color + '"></span>' +
+        '<strong>' + site + '</strong><br>' + series + ': ' + value;
+      tooltip.style.display = 'block';
+    });
+    el.addEventListener('mousemove', (e) => {
+      tooltip.style.left = (e.clientX + 14) + 'px';
+      tooltip.style.top = (e.clientY + 14) + 'px';
+    });
+    el.addEventListener('mouseleave', () => {
+      tooltip.style.display = 'none';
+    });
+  });
+}
+
+function shadeHex(hex, percent) {
+  let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+  const amt = Math.round(2.55 * percent);
+  r = Math.min(255, Math.max(0, r + amt));
+  g = Math.min(255, Math.max(0, g + amt));
+  b = Math.min(255, Math.max(0, b + amt));
+  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+
+function escapeXml_(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function drawPieChart(elId, sites, values, seriesLabel) {
+  const dataTable = new google.visualization.DataTable();
+  dataTable.addColumn('string', 'Site');
+  dataTable.addColumn('number', seriesLabel);
+
+  let hasData = false;
+  sites.forEach((site, i) => {
+    const v = values[i] || 0;
+    if (v > 0) hasData = true;
+    dataTable.addRow([site, v]);
+  });
+
+  const container = document.getElementById(elId);
+  if (!hasData) {
+    container.innerHTML = '<div class="lls-empty">No ' + seriesLabel.toLowerCase() + ' shortage values for this period</div>';
+    return;
+  }
+  container.innerHTML = '';
+
+  const options = {
+    title: '',
+    fontName: 'Inter',
+    is3D: true,
+    colors: buildDistinctPalette(sites.length),
+    legend: { position: 'right', textStyle: { fontSize: 11, color: '#12212e' } },
+    chartArea: { left: 10, top: 10, right: 10, bottom: 10, width: '92%', height: '92%' },
+    backgroundColor: 'transparent',
+    pieSliceTextStyle: { fontSize: 10 }
+  };
+
+  const chart = new google.visualization.PieChart(container);
+  chart.draw(dataTable, options);
+}
+
+// A curated set of visually distinct hues (blue, green, red, purple,
+// orange, teal, etc.) — used for BOTH pie charts so each site keeps
+// the same color across the Declared and Undeclared pies, and slices
+// are easy to tell apart at a glance instead of shades of one color.
+const DISTINCT_PALETTE = [
+  '#2f6fed', // blue
+  '#2fae66', // green
+  '#e0483f', // red
+  '#8a4fd0', // purple
+  '#e0932f', // orange
+  '#1fa4a0', // teal
+  '#d1479a', // magenta/pink
+  '#9aa628', // olive
+  '#4f6fd0', // indigo
+  '#c96b2e', // burnt orange
+  '#2f9fd0', // sky blue
+  '#7a4a2e', // brown
+  '#5fb84a', // lime green
+  '#a83f6b', // wine
+  '#4a90a4', // steel blue
+  '#d6603d', // terracotta
+  '#6a5fd0', // violet
+  '#3fae9a', // seafoam
+  '#c2472f', // brick red
+  '#8a8f2e'  // mustard
+];
+
+function buildDistinctPalette(count) {
+  const colors = [];
+  for (let i = 0; i < count; i++) {
+    colors.push(DISTINCT_PALETTE[i % DISTINCT_PALETTE.length]);
+  }
+  return colors;
+}
+
+function showEmptyStates() {
+  ['columnChart','pieDeclared','pieUndeclared'].forEach(id => {
+    document.getElementById(id).innerHTML = '<div class="lls-empty">No data available</div>';
+  });
+}
+
+function debounce(fn, wait) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+}
+</script>
 </body>
 </html>
